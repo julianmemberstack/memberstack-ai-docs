@@ -1,0 +1,47 @@
+{
+  "name": "memberstack-ai-docs",
+  "version": "1.0.0",
+  "description": "AI-friendly documentation installer for Memberstack DOM package",
+  "main": "src/installer.js",
+  "bin": {
+    "memberstack-ai-docs": "./bin/install.js"
+  },
+  "scripts": {
+    "test": "node bin/install.js --dry-run",
+    "build-index": "node scripts/build-index.js",
+    "prepublishOnly": "npm run build-index"
+  },
+  "keywords": [
+    "memberstack",
+    "ai",
+    "documentation",
+    "claude",
+    "cursor",
+    "copilot",
+    "ai-docs"
+  ],
+  "author": "Julian Galluzzo",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/julianmemberstack/memberstack-ai-docs"
+  },
+  "bugs": {
+    "url": "https://github.com/julianmemberstack/memberstack-ai-docs/issues"
+  },
+  "homepage": "https://github.com/julianmemberstack/memberstack-ai-docs#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "commander": "^9.4.1",
+    "node-fetch": "^2.6.7"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "docs/",
+    "templates/"
+  ]
+}

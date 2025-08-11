@@ -1,0 +1,11 @@
+node_modules/
+.DS_Store
+*.log
+.memberstack/
+CLAUDE.md
+.cursorrules
+.env
+.env.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
