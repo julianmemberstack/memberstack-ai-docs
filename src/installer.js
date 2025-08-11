@@ -45,7 +45,7 @@ class MemberstackInstaller {
       console.log(chalk.green.bold('\n✅ Memberstack AI Documentation installed successfully!'));
       console.log(chalk.cyan('\n📚 AI agents now have access to:'));
       console.log(chalk.white('   • 30 common methods (immediate access in CLAUDE.md)'));
-      console.log(chalk.white('   • 47 total methods (searchable via index)'));
+      console.log(chalk.white('   • 49 total methods (searchable via index)'));
       console.log(chalk.white('   • Complete documentation with examples'));
       
       console.log(chalk.gray('\n💡 Commands:'));
@@ -384,7 +384,7 @@ For complete implementation examples, see \`.memberstack/quickref.md\`
 - \`openModal({ type: 'LOGIN' | 'SIGNUP' | 'PROFILE' })\` - Open pre-built modal
 - \`hideModal()\` - Close current modal
 
-## Finding All Methods (47 total)
+## Finding All Methods (49 total)
 
 1. **Search index**: \`.memberstack/index.json\` - Searchable method index
 2. **Quick reference**: \`.memberstack/quickref.md\` - 30 common methods with examples
@@ -455,7 +455,7 @@ useEffect(() => {
 
 ## Documentation Version: 2.0.0
 Last Updated: 2025-01-11
-Total Methods: 47
+Total Methods: 49
 ${CLAUDE_MARKER_END}`;
   }
 
@@ -505,7 +505,7 @@ For complete implementation examples, see \`.memberstack/quickref.md\`
 - \`openModal({ type: 'LOGIN' | 'SIGNUP' | 'PROFILE' })\` - Open pre-built modal
 - \`hideModal()\` - Close current modal
 
-## Finding All Methods (47 total)
+## Finding All Methods (49 total)
 
 1. **Search index**: \`.memberstack/index.json\` - Searchable method index
 2. **Quick reference**: \`.memberstack/quickref.md\` - 30 common methods with examples
@@ -521,7 +521,7 @@ When implementing Memberstack features:
 
 ## Documentation Version: 2.0.0
 Last Updated: 2025-01-11
-Total Methods: 47
+Total Methods: 49
 
 ${CURSOR_MARKER_END}`;
   }

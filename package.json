@@ -8,8 +8,7 @@
   },
   "scripts": {
     "test": "node bin/install.js --dry-run",
-    "build-index": "node scripts/build-index.js",
-    "prepublishOnly": "npm run build-index"
+    "build-index": "node scripts/build-index.js"
   },
   "keywords": [
     "memberstack",

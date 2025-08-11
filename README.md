@@ -17,7 +17,7 @@ That's it! Your AI assistant now has complete access to all Memberstack methods 
 The installer creates:
 
 1. **`.memberstack/` directory** containing:
-   - `complete.md` - Full documentation for all 47 methods
+   - `complete.md` - Full documentation for all 49 methods
    - `index.json` - Searchable method index for AI discovery
    - `quickref.md` - Quick reference with 30 most common methods
 
@@ -29,7 +29,7 @@ The installer is **non-destructive** - it preserves your existing content and on
 
 ## 🎯 Features
 
-- **Complete API Coverage**: All 47 Memberstack methods documented with signatures, parameters, and examples
+- **Complete API Coverage**: All 49 Memberstack methods documented with signatures, parameters, and examples
 - **AI-Optimized**: Structured for efficient parsing and searching by AI agents
 - **Smart Search**: JSON index enables AI to quickly find relevant methods
 - **Progressive Discovery**: Quick reference → Index search → Full documentation
@@ -76,9 +76,10 @@ Example AI queries that now work:
 
 ### Method Categories
 
-- **Authentication** (12 methods): Login, signup, logout, passwordless, social auth, verification
+- **Initialization** (2 methods): SDK setup and connection testing
+- **Authentication** (11 methods): Login, signup, logout, passwordless, social auth, verification
 - **Member Management** (7 methods): Profile updates, custom fields, metadata, JSON data
-- **Billing** (8 methods): Plans, subscriptions, Stripe checkout, billing portal
+- **Billing** (6 methods): Plans, subscriptions, Stripe checkout, billing portal
 - **UI Components** (6 methods): Pre-built modals, loaders, messages
 - **Content** (9 methods): Secure content, posts, comments, threads, voting
 - **Teams** (4 methods): Team management, invitations

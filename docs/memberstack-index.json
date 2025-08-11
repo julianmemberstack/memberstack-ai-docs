@@ -1,8 +1,15 @@
 {
-  "version": "2.0.0",
-  "totalMethods": 47,
+  "version": "2.0.1",
+  "totalMethods": 49,
   "lastUpdated": "2025-01-11",
   "categories": {
+    "initialization": {
+      "description": "SDK initialization and setup",
+      "methods": [
+        "init",
+        "getApp"
+      ]
+    },
     "authentication": {
       "description": "Methods for user authentication and session management",
       "methods": [
@@ -16,7 +23,6 @@
         "sendMemberResetPasswordEmail",
         "resetMemberPassword",
         "sendMemberVerificationEmail",
-        "sendMemberEmailVerification",
         "onAuthChange"
       ]
     },
@@ -40,9 +46,7 @@
         "addPlan",
         "removePlan",
         "purchasePlansWithCheckout",
-        "createCheckoutSession",
-        "launchStripeCustomerPortal",
-        "createCustomerPortalSession"
+        "launchStripeCustomerPortal"
       ]
     },
     "ui": {
@@ -87,6 +91,20 @@
     }
   },
   "methodDetails": [
+    {
+      "name": "init",
+      "signature": "MemberstackDom.init({ publicKey: string, ...options })",
+      "returns": "Memberstack",
+      "category": "initialization",
+      "description": "Initialize the Memberstack SDK"
+    },
+    {
+      "name": "getApp",
+      "signature": "memberstack.getApp()",
+      "returns": "Promise<{ data: App }>",
+      "category": "initialization",
+      "description": "Get app configuration and test connection"
+    },
     {
       "name": "loginMemberEmailPassword",
       "signature": "loginMemberEmailPassword({ email: string, password: string })",
@@ -158,13 +176,6 @@
       "description": "Send email verification"
     },
     {
-      "name": "sendMemberEmailVerification",
-      "signature": "sendMemberEmailVerification({ email: string })",
-      "returns": "Promise<SendMemberEmailVerificationPayload>",
-      "category": "authentication",
-      "description": "Send email verification (alternate method)"
-    },
-    {
       "name": "onAuthChange",
       "signature": "onAuthChange(callback: (member: Member | null) => void)",
       "returns": "() => void",
@@ -187,8 +198,8 @@
     },
     {
       "name": "updateMemberProfileImage",
-      "signature": "updateMemberProfileImage({ image: File })",
-      "returns": "Promise<UpdateProfileImagePayload>",
+      "signature": "updateMemberProfileImage({ profileImage: File })",
+      "returns": "Promise<UpdateMemberProfileImagePayload>",
       "category": "members",
       "description": "Update member profile picture"
     },
@@ -250,31 +261,17 @@
     },
     {
       "name": "purchasePlansWithCheckout",
-      "signature": "purchasePlansWithCheckout({ priceIds: string[], successUrl?: string, cancelUrl?: string })",
+      "signature": "purchasePlansWithCheckout({ priceId: string, couponId?: string, successUrl?: string, cancelUrl?: string, autoRedirect?: boolean })",
       "returns": "Promise<PurchasePlanPayload>",
       "category": "billing",
       "description": "Open Stripe checkout for plan purchase"
     },
     {
-      "name": "createCheckoutSession",
-      "signature": "createCheckoutSession({ priceIds: string[], successUrl?: string, cancelUrl?: string })",
-      "returns": "Promise<CheckoutSessionPayload>",
-      "category": "billing",
-      "description": "Create Stripe checkout session (alternate method)"
-    },
-    {
       "name": "launchStripeCustomerPortal",
-      "signature": "launchStripeCustomerPortal({ returnUrl?: string })",
+      "signature": "launchStripeCustomerPortal({ returnUrl?: string, autoRedirect?: boolean })",
       "returns": "Promise<LaunchStripePortalPayload>",
       "category": "billing",
       "description": "Open Stripe billing portal"
-    },
-    {
-      "name": "createCustomerPortalSession",
-      "signature": "createCustomerPortalSession({ returnUrl?: string })",
-      "returns": "Promise<CustomerPortalSessionPayload>",
-      "category": "billing",
-      "description": "Create Stripe portal session (alternate method)"
     },
     {
       "name": "openModal",
@@ -327,10 +324,10 @@
     },
     {
       "name": "getPosts",
-      "signature": "getPosts({ limit?: number, offset?: number })",
-      "returns": "Promise<{ data: Post[] }>",
+      "signature": "getPosts({ channelKey: string, order?: 'newest' | 'oldest', after?: string, limit?: number })",
+      "returns": "Promise<GetPostsPayload>",
       "category": "content",
-      "description": "Get posts/comments"
+      "description": "Get posts/comments from a channel"
     },
     {
       "name": "createPost",
@@ -390,10 +387,10 @@
     },
     {
       "name": "getTeam",
-      "signature": "getTeam()",
-      "returns": "Promise<{ data: Team }>",
+      "signature": "getTeam({ teamId: string })",
+      "returns": "Promise<GetTeamPayload>",
       "category": "teams",
-      "description": "Get current team information"
+      "description": "Get team information"
     },
     {
       "name": "generateInviteToken",
@@ -418,11 +415,13 @@
     }
   ],
   "searchKeywords": {
+    "init": ["init", "initialize", "setup", "start"],
+    "app": ["getApp", "connection", "test"],
     "login": ["loginMemberEmailPassword", "loginMemberPasswordless", "loginWithProvider", "sendMemberLoginPasswordlessEmail"],
     "signup": ["signupMemberEmailPassword", "signupWithProvider"],
     "logout": ["logout"],
     "password": ["loginMemberEmailPassword", "signupMemberEmailPassword", "resetMemberPassword", "sendMemberResetPasswordEmail", "updateMemberAuth"],
-    "email": ["loginMemberEmailPassword", "signupMemberEmailPassword", "sendMemberLoginPasswordlessEmail", "sendMemberResetPasswordEmail", "sendMemberVerificationEmail", "sendMemberEmailVerification"],
+    "email": ["loginMemberEmailPassword", "signupMemberEmailPassword", "sendMemberLoginPasswordlessEmail", "sendMemberResetPasswordEmail", "sendMemberVerificationEmail"],
     "social": ["loginWithProvider", "signupWithProvider"],
     "oauth": ["loginWithProvider", "signupWithProvider"],
     "google": ["loginWithProvider", "signupWithProvider"],
@@ -431,27 +430,29 @@
     "profile": ["updateMember", "updateMemberProfileImage", "openModal", "showModal"],
     "plan": ["getPlans", "getPlan", "addPlan", "removePlan", "purchasePlansWithCheckout"],
     "subscription": ["getPlans", "getPlan", "addPlan", "removePlan", "purchasePlansWithCheckout"],
-    "billing": ["purchasePlansWithCheckout", "launchStripeCustomerPortal", "createCheckoutSession", "createCustomerPortalSession"],
-    "payment": ["purchasePlansWithCheckout", "launchStripeCustomerPortal", "createCheckoutSession", "createCustomerPortalSession"],
-    "stripe": ["purchasePlansWithCheckout", "launchStripeCustomerPortal", "createCheckoutSession", "createCustomerPortalSession"],
-    "checkout": ["purchasePlansWithCheckout", "createCheckoutSession"],
+    "billing": ["purchasePlansWithCheckout", "launchStripeCustomerPortal"],
+    "payment": ["purchasePlansWithCheckout", "launchStripeCustomerPortal"],
+    "stripe": ["purchasePlansWithCheckout", "launchStripeCustomerPortal"],
+    "checkout": ["purchasePlansWithCheckout"],
     "modal": ["openModal", "showModal", "hideModal"],
     "ui": ["openModal", "showModal", "hideModal", "_showLoader", "_hideLoader", "_showMessage"],
     "team": ["joinTeam", "getTeam", "generateInviteToken", "removeMemberFromTeam"],
     "auth": ["onAuthChange", "updateMemberAuth"],
     "passwordless": ["loginMemberPasswordless", "sendMemberLoginPasswordlessEmail"],
-    "verification": ["sendMemberVerificationEmail", "sendMemberEmailVerification"],
+    "verification": ["sendMemberVerificationEmail"],
     "reset": ["resetMemberPassword", "sendMemberResetPasswordEmail"],
     "update": ["updateMember", "updateMemberProfileImage", "updateMemberAuth", "updateMemberJSON", "updatePost"],
     "delete": ["deleteMember", "deletePost", "removeMemberFromTeam"],
-    "get": ["getCurrentMember", "getPlans", "getPlan", "getMemberJSON", "getTeam", "getSecureContent", "getPosts", "getThreads"],
+    "get": ["getApp", "getCurrentMember", "getPlans", "getPlan", "getMemberJSON", "getTeam", "getSecureContent", "getPosts", "getThreads"],
     "fetch": ["getCurrentMember", "getPlans", "getPlan", "getMemberJSON", "getTeam", "getSecureContent", "getPosts", "getThreads"],
     "comment": ["getPosts", "createPost", "updatePost", "deletePost", "postVote"],
     "post": ["getPosts", "createPost", "updatePost", "deletePost", "postVote"],
     "thread": ["getThreads", "createThread", "threadVote"],
     "vote": ["postVote", "threadVote"],
     "content": ["getSecureContent", "getPosts", "createPost", "updatePost", "deletePost"],
+    "secure": ["getSecureContent"],
     "loader": ["_showLoader", "_hideLoader"],
-    "message": ["_showMessage"]
+    "message": ["_showMessage"],
+    "channel": ["getPosts"]
   }
 }
