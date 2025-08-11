@@ -43,7 +43,7 @@ For complete implementation examples, see `.memberstack/quickref.md`
 - `openModal({ type: 'LOGIN' | 'SIGNUP' | 'PROFILE' })` - Open pre-built modal
 - `hideModal()` - Close current modal
 
-## Finding All Methods (36 total)
+## Finding All Methods (47 total)
 
 1. **Search index**: `.memberstack/index.json` - Searchable method index
 2. **Quick reference**: `.memberstack/quickref.md` - 30 common methods with examples
@@ -59,6 +59,6 @@ When implementing Memberstack features:
 
 ## Documentation Version: 2.0.0
 Last Updated: 2025-01-11
-Total Methods: 36
+Total Methods: 47
 
 # MEMBERSTACK-AI-DOCS-END

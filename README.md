@@ -17,7 +17,7 @@ That's it! Your AI assistant now has complete access to all Memberstack methods 
 The installer creates:
 
 1. **`.memberstack/` directory** containing:
-   - `complete.md` - Full documentation for all 36 methods
+   - `complete.md` - Full documentation for all 47 methods
    - `index.json` - Searchable method index for AI discovery
    - `quickref.md` - Quick reference with 30 most common methods
 
@@ -29,7 +29,7 @@ The installer is **non-destructive** - it preserves your existing content and on
 
 ## 🎯 Features
 
-- **Complete API Coverage**: All 36 Memberstack methods documented with signatures, parameters, and examples
+- **Complete API Coverage**: All 47 Memberstack methods documented with signatures, parameters, and examples
 - **AI-Optimized**: Structured for efficient parsing and searching by AI agents
 - **Smart Search**: JSON index enables AI to quickly find relevant methods
 - **Progressive Discovery**: Quick reference → Index search → Full documentation
@@ -63,7 +63,7 @@ npx memberstack-ai-docs --verbose
 
 Once installed, AI assistants can:
 
-1. **Immediate Access**: View 30 most common methods directly in CLAUDE.md/.cursorrules
+1. **Immediate Access**: View most common methods directly in CLAUDE.md/.cursorrules
 2. **Search Methods**: Query the JSON index to find specific functionality
 3. **Deep Dive**: Access complete documentation for detailed implementation
 
@@ -76,11 +76,13 @@ Example AI queries that now work:
 
 ### Method Categories
 
-- **Authentication** (11 methods): Login, signup, logout, passwordless, social auth
-- **Member Management** (7 methods): Profile updates, custom fields, metadata
-- **Plans & Billing** (6 methods): Subscriptions, Stripe checkout, billing portal
-- **UI Components** (2 methods): Pre-built modals for login/signup/profile
-- **Advanced Features** (5 methods): Teams, secure content, invitations
+- **Authentication** (12 methods): Login, signup, logout, passwordless, social auth, verification
+- **Member Management** (7 methods): Profile updates, custom fields, metadata, JSON data
+- **Billing** (8 methods): Plans, subscriptions, Stripe checkout, billing portal
+- **UI Components** (6 methods): Pre-built modals, loaders, messages
+- **Content** (9 methods): Secure content, posts, comments, threads, voting
+- **Teams** (4 methods): Team management, invitations
+- **Internal** (1 method): Event tracking
 
 ### Method Example
 
