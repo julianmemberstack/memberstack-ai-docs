@@ -4,13 +4,23 @@ AI-optimized documentation installer for the Memberstack DOM package. Makes Memb
 
 ## 🚀 Quick Start
 
-Install the Memberstack AI documentation in your project with one command:
+Install the Memberstack AI documentation in your project:
 
 ```bash
 npx memberstack-ai-docs
 ```
 
-That's it! Your AI assistant now has complete access to all Memberstack methods and documentation.
+The installer will ask which AI assistant you're using:
+- **Claude Code** - Creates `CLAUDE.md`
+- **Cursor** - Creates `.cursorrules`
+- **Both** - Creates both files
+
+Or specify directly:
+```bash
+npx memberstack-ai-docs --ai claude   # Claude Code only
+npx memberstack-ai-docs --ai cursor   # Cursor only
+npx memberstack-ai-docs --ai both     # Both tools
+```
 
 ## 📦 What Gets Installed
 
@@ -21,9 +31,9 @@ The installer creates:
    - `index.json` - Searchable method index for AI discovery
    - `quickref.md` - Quick reference with 30 most common methods
 
-2. **Updates to AI config files**:
-   - `CLAUDE.md` - Adds Memberstack section for Claude Code
-   - `.cursorrules` - Adds Memberstack section for Cursor
+2. **AI config files** (based on your selection):
+   - `CLAUDE.md` - For Claude Code (if selected)
+   - `.cursorrules` - For Cursor (if selected)
 
 The installer is **non-destructive** - it preserves your existing content and only adds clearly marked Memberstack sections.
 

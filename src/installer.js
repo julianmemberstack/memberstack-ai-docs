@@ -21,6 +21,9 @@ class MemberstackInstaller {
     try {
       console.log(chalk.blue('📦 Installing Memberstack AI Documentation...'));
       
+      // Get AI tools to install for (default to both)
+      const aiTools = options.aiTools || ['claude', 'cursor'];
+      
       if (options.dryRun) {
         console.log(chalk.yellow('🔍 DRY RUN MODE - No files will be modified'));
       }
@@ -31,21 +34,38 @@ class MemberstackInstaller {
       // Step 2: Download documentation files
       await this.downloadDocumentation(options);
 
-      // Step 3: Update CLAUDE.md
-      await this.updateClaudeFile(options);
+      // Step 3: Update AI-specific files based on selection
+      if (aiTools.includes('claude')) {
+        await this.updateClaudeFile(options);
+      } else {
+        console.log(chalk.gray('⊘ Skipping CLAUDE.md (Claude Code not selected)'));
+      }
 
-      // Step 4: Update .cursorrules
-      await this.updateCursorRules(options);
+      if (aiTools.includes('cursor')) {
+        await this.updateCursorRules(options);
+      } else {
+        console.log(chalk.gray('⊘ Skipping .cursorrules (Cursor not selected)'));
+      }
 
-      // Step 5: Validate installation
+      // Step 4: Validate installation
       if (!options.dryRun) {
-        await this.validate(options);
+        await this.validate({ ...options, aiTools });
       }
 
       console.log(chalk.green.bold('\n✅ Memberstack AI Documentation installed successfully!'));
-      console.log(chalk.cyan('\n📚 AI agents now have access to:'));
-      console.log(chalk.white('   • 30 common methods (immediate access in CLAUDE.md)'));
-      console.log(chalk.white('   • 49 total methods (searchable via index)'));
+      
+      // Show what was installed
+      console.log(chalk.cyan('\n📚 Installed for:'));
+      if (aiTools.includes('claude')) {
+        console.log(chalk.white('   ✓ Claude Code (CLAUDE.md)'));
+      }
+      if (aiTools.includes('cursor')) {
+        console.log(chalk.white('   ✓ Cursor (.cursorrules)'));
+      }
+      
+      console.log(chalk.cyan('\n📖 Documentation available:'));
+      console.log(chalk.white('   • 30 common methods (quick reference)'));
+      console.log(chalk.white('   • 49 total methods (searchable index)'));
       console.log(chalk.white('   • Complete documentation with examples'));
       
       console.log(chalk.gray('\n💡 Commands:'));
@@ -270,6 +290,21 @@ class MemberstackInstaller {
   async validate(options) {
     console.log(chalk.blue('\n🔍 Validating Memberstack AI Documentation installation...'));
     
+    // Get which AI tools to validate (check what exists if not specified)
+    let aiTools = options.aiTools;
+    if (!aiTools) {
+      aiTools = [];
+      if (fs.existsSync(path.join(this.projectRoot, 'CLAUDE.md'))) {
+        aiTools.push('claude');
+      }
+      if (fs.existsSync(path.join(this.projectRoot, '.cursorrules'))) {
+        aiTools.push('cursor');
+      }
+      if (aiTools.length === 0) {
+        aiTools = ['claude', 'cursor']; // Check both if neither exists
+      }
+    }
+    
     let isValid = true;
     const checks = [];
 
@@ -297,30 +332,34 @@ class MemberstackInstaller {
       isValid = false;
     }
 
-    // Check CLAUDE.md
-    const claudePath = path.join(this.projectRoot, 'CLAUDE.md');
-    if (fs.existsSync(claudePath)) {
-      const content = fs.readFileSync(claudePath, 'utf-8');
-      if (content.includes(CLAUDE_MARKER_START)) {
-        checks.push({ status: '✓', message: 'CLAUDE.md contains Memberstack section' });
+    // Check CLAUDE.md if Claude was selected
+    if (aiTools.includes('claude')) {
+      const claudePath = path.join(this.projectRoot, 'CLAUDE.md');
+      if (fs.existsSync(claudePath)) {
+        const content = fs.readFileSync(claudePath, 'utf-8');
+        if (content.includes(CLAUDE_MARKER_START)) {
+          checks.push({ status: '✓', message: 'CLAUDE.md contains Memberstack section' });
+        } else {
+          checks.push({ status: '⚠', message: 'CLAUDE.md exists but missing Memberstack section' });
+        }
       } else {
-        checks.push({ status: '⚠', message: 'CLAUDE.md exists but missing Memberstack section' });
+        checks.push({ status: '⚠', message: 'CLAUDE.md not found' });
       }
-    } else {
-      checks.push({ status: '⚠', message: 'CLAUDE.md not found' });
     }
 
-    // Check .cursorrules
-    const cursorPath = path.join(this.projectRoot, '.cursorrules');
-    if (fs.existsSync(cursorPath)) {
-      const content = fs.readFileSync(cursorPath, 'utf-8');
-      if (content.includes(CURSOR_MARKER_START)) {
-        checks.push({ status: '✓', message: '.cursorrules contains Memberstack section' });
+    // Check .cursorrules if Cursor was selected
+    if (aiTools.includes('cursor')) {
+      const cursorPath = path.join(this.projectRoot, '.cursorrules');
+      if (fs.existsSync(cursorPath)) {
+        const content = fs.readFileSync(cursorPath, 'utf-8');
+        if (content.includes(CURSOR_MARKER_START)) {
+          checks.push({ status: '✓', message: '.cursorrules contains Memberstack section' });
+        } else {
+          checks.push({ status: '⚠', message: '.cursorrules exists but missing Memberstack section' });
+        }
       } else {
-        checks.push({ status: '⚠', message: '.cursorrules exists but missing Memberstack section' });
+        checks.push({ status: '⚠', message: '.cursorrules not found' });
       }
-    } else {
-      checks.push({ status: '⚠', message: '.cursorrules not found' });
     }
 
     // Display results
