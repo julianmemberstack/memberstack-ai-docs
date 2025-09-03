@@ -269,8 +269,59 @@ try {
 }
 ```
 
+## Data Tables
+
+### Query Records with Filtering
+```javascript
+const { data } = await memberstack.queryDataRecords({
+  table: "products",
+  query: {
+    where: { 
+      category: "electronics",
+      price: { lte: 1000 }
+    },
+    orderBy: { price: "asc" },
+    take: 10
+  }
+});
+```
+
+### Create Record
+```javascript
+const newRecord = await memberstack.createDataRecord({
+  tableKey: "products",
+  data: {
+    name: "iPhone 15",
+    price: 999,
+    inStock: true
+  }
+});
+```
+
+### Update Record with Like/Bookmark
+```javascript
+// Add like (member reference)
+await memberstack.updateDataRecord({
+  recordId: "post_123",
+  data: {
+    likedBy: {
+      connect: { self: true }  // Like the post
+    }
+  }
+});
+
+// Regular field update
+await memberstack.updateDataRecord({
+  recordId: "prod_123",
+  data: {
+    price: 899,
+    inStock: false
+  }
+});
+```
+
 ## Complete Documentation
 
-For all 36+ methods and detailed parameters, see:
+For all 57 methods and detailed parameters, see:
 - Full reference: `.memberstack/complete.md`
 - Search index: `.memberstack/index.json`

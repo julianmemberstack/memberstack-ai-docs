@@ -39,7 +39,7 @@ The installer is **non-destructive** - it preserves your existing content and on
 
 ## 🎯 Features
 
-- **Complete API Coverage**: All 49 Memberstack methods documented with signatures, parameters, and examples
+- **Complete API Coverage**: All 57 Memberstack methods documented with signatures, parameters, and examples
 - **AI-Optimized**: Structured for efficient parsing and searching by AI agents
 - **Smart Search**: JSON index enables AI to quickly find relevant methods
 - **Progressive Discovery**: Quick reference → Index search → Full documentation
@@ -93,6 +93,7 @@ Example AI queries that now work:
 - **UI Components** (6 methods): Pre-built modals, loaders, messages
 - **Content** (9 methods): Secure content, posts, comments, threads, voting
 - **Teams** (4 methods): Team management, invitations
+- **Data Tables** (8 methods): Database operations, query records, manage tables, reference fields
 - **Internal** (1 method): Event tracking
 
 ### Method Example

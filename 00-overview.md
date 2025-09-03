@@ -19,7 +19,7 @@ The `@memberstack/dom` package is Memberstack's core JavaScript SDK for browser-
 - **Subscription Management**: Plan purchases, billing portal, subscription lifecycle
 - **Pre-built UI**: Login/signup/profile modals with customizable styling
 - **Real-time Features**: Authentication state changes, member data updates
-- **Advanced Features**: Comments system, secure content, team management
+- **Advanced Features**: Comments system, secure content, team management, data tables
 
 ## Installation
 

@@ -1,6 +1,6 @@
 {
   "version": "2.0.1",
-  "totalMethods": 49,
+  "totalMethods": 57,
   "lastUpdated": "2025-01-11",
   "categories": {
     "initialization": {
@@ -87,6 +87,19 @@
       "description": "Internal utility methods",
       "methods": [
         "_Event"
+      ]
+    },
+    "data-tables": {
+      "description": "Database operations for managing data records and tables",
+      "methods": [
+        "queryDataRecords",
+        "getDataTable",
+        "getDataTables",
+        "getDataRecords",
+        "getDataRecord",
+        "createDataRecord",
+        "updateDataRecord",
+        "deleteDataRecord"
       ]
     }
   },
@@ -412,6 +425,62 @@
       "returns": "Promise<void>",
       "category": "internal",
       "description": "Internal event tracking"
+    },
+    {
+      "name": "queryDataRecords",
+      "signature": "queryDataRecords({ table: string, query: DataRecordsQuery })",
+      "returns": "Promise<QueryDataRecordsPayload>",
+      "category": "data-tables",
+      "description": "Query records with advanced filtering, sorting, and relationships"
+    },
+    {
+      "name": "getDataTable",
+      "signature": "getDataTable({ tableKey: string })",
+      "returns": "Promise<GetDataTablePayload>",
+      "category": "data-tables",
+      "description": "Get metadata about a single data table"
+    },
+    {
+      "name": "getDataTables",
+      "signature": "getDataTables()",
+      "returns": "Promise<GetDataTablesPayload>",
+      "category": "data-tables",
+      "description": "List all accessible data tables"
+    },
+    {
+      "name": "getDataRecords",
+      "signature": "getDataRecords({ tableKey: string, ...filters })",
+      "returns": "Promise<GetDataRecordsPayload>",
+      "category": "data-tables",
+      "description": "List records from a table with basic filters"
+    },
+    {
+      "name": "getDataRecord",
+      "signature": "getDataRecord({ recordId: string })",
+      "returns": "Promise<GetDataRecordPayload>",
+      "category": "data-tables",
+      "description": "Get a single record by ID"
+    },
+    {
+      "name": "createDataRecord",
+      "signature": "createDataRecord({ tableKey: string, data: object })",
+      "returns": "Promise<CreateDataRecordPayload>",
+      "category": "data-tables",
+      "description": "Create a new record in a table"
+    },
+    {
+      "name": "updateDataRecord",
+      "signature": "updateDataRecord({ recordId: string, data: object })",
+      "returns": "Promise<UpdateDataRecordPayload>",
+      "category": "data-tables",
+      "description": "Update record including reference operations"
+    },
+    {
+      "name": "deleteDataRecord",
+      "signature": "deleteDataRecord({ recordId: string })",
+      "returns": "Promise<DeleteDataRecordPayload>",
+      "category": "data-tables",
+      "description": "Delete a record from a table"
     }
   ],
   "searchKeywords": {
@@ -453,6 +522,18 @@
     "secure": ["getSecureContent"],
     "loader": ["_showLoader", "_hideLoader"],
     "message": ["_showMessage"],
-    "channel": ["getPosts"]
+    "channel": ["getPosts"],
+    "database": ["queryDataRecords", "getDataTable", "getDataTables", "getDataRecords", "getDataRecord", "createDataRecord", "updateDataRecord", "deleteDataRecord"],
+    "data": ["queryDataRecords", "getDataTable", "getDataTables", "getDataRecords", "getDataRecord", "createDataRecord", "updateDataRecord", "deleteDataRecord"],
+    "table": ["getDataTable", "getDataTables", "queryDataRecords", "getDataRecords"],
+    "record": ["queryDataRecords", "getDataRecords", "getDataRecord", "createDataRecord", "updateDataRecord", "deleteDataRecord"],
+    "query": ["queryDataRecords", "getDataRecords"],
+    "create": ["createDataRecord"],
+    "filter": ["queryDataRecords", "getDataRecords"],
+    "sort": ["queryDataRecords", "getDataRecords"],
+    "reference": ["updateDataRecord"],
+    "relationship": ["queryDataRecords", "updateDataRecord"],
+    "like": ["updateDataRecord"],
+    "bookmark": ["updateDataRecord"]
   }
 }
