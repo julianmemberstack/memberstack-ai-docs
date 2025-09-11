@@ -134,6 +134,9 @@ interface PlanConnection {
   id: string;                         // Connection identifier
   planId: string;                     // Reference to plan
   status: PlanConnectionStatus;       // Connection status
+  payment?: {                         // Payment details for paid plans
+    priceId: string;                  // Stripe price ID - USE THIS for plan detection
+  };
   createdAt: string;                  // When connection was created
   updatedAt: string;                  // Last status change
   cancelledAt?: string | null;        // When cancelled (if applicable)

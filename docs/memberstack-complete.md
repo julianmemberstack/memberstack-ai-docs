@@ -3017,6 +3017,412 @@ async function showBillingOptions() {
 }
 ```
 
+## Plan Detection Using payment.priceId
+
+### Critical: Use payment.priceId for Paid Plan Detection
+
+For paid plans, always check `planConnection.payment.priceId` rather than `planConnection.planId`:
+
+```javascript
+// ✅ CORRECT: Check paid plan using payment.priceId
+const hasPremiumPlan = member?.planConnections?.some(planConnection =>
+  planConnection.payment?.priceId === 'prc_premium-monthly-d422107a7' &&
+  planConnection.status === 'ACTIVE'
+) || false;
+
+// ❌ INCORRECT: Checking planId for paid plans (unreliable)
+const incorrectCheck = member?.planConnections?.some(planConnection =>
+  planConnection.planId === 'pln_some_plan_id' &&
+  planConnection.status === 'ACTIVE'
+);
+```
+
+### Complete Plan Detection Helper
+
+```javascript
+function checkMemberPlanAccess(member, targetPriceId) {
+  if (!member?.planConnections) {
+    return false;
+  }
+  
+  return member.planConnections.some(planConnection =>
+    planConnection.payment?.priceId === targetPriceId &&
+    planConnection.status === 'ACTIVE'
+  );
+}
+
+// Usage examples
+const { data: member } = await memberstack.getCurrentMember();
+
+const hasPremiumMonthly = checkMemberPlanAccess(member, 'prc_premium-monthly-d422107a7');
+const hasPremiumYearly = checkMemberPlanAccess(member, 'prc_premium-yearly-e533218b8');
+const hasProPlan = checkMemberPlanAccess(member, 'prc_pro-monthly-f644329c9');
+```
+
+### Real Member Object Example
+
+When a member purchases a paid plan, their planConnections structure looks like this:
+
+```javascript
+{
+  id: "mem_abc123",
+  auth: { email: "user@example.com" },
+  planConnections: [
+    {
+      id: "pc_connection123",
+      planId: "pln_some_internal_id", // Don't rely on this for paid plans
+      status: "ACTIVE",
+      payment: {
+        priceId: "prc_premium-monthly-d422107a7" // USE THIS for plan detection
+      },
+      createdAt: "2024-01-15T10:30:00.000Z",
+      updatedAt: "2024-01-15T10:30:00.000Z"
+    }
+  ]
+}
+```
+
+### Content Gating Patterns
+
+```javascript
+// Gate premium content
+function gatePremiumContent(member) {
+  const premiumPriceIds = [
+    'prc_premium-monthly-d422107a7',
+    'prc_premium-yearly-e533218b8'
+  ];
+  
+  const hasPremiumAccess = member?.planConnections?.some(pc =>
+    premiumPriceIds.includes(pc.payment?.priceId) &&
+    pc.status === 'ACTIVE'
+  ) || false;
+  
+  if (hasPremiumAccess) {
+    // Show premium content
+    document.querySelectorAll('.premium-content').forEach(el => {
+      el.style.display = 'block';
+    });
+    document.querySelectorAll('.upgrade-prompt').forEach(el => {
+      el.style.display = 'none';
+    });
+  } else {
+    // Show upgrade prompt
+    document.querySelectorAll('.premium-content').forEach(el => {
+      el.style.display = 'none';
+    });
+    document.querySelectorAll('.upgrade-prompt').forEach(el => {
+      el.style.display = 'block';
+    });
+  }
+}
+
+// Usage
+const { data: member } = await memberstack.getCurrentMember();
+gatePremiumContent(member);
+```
+
+### Complete Paid Plan Implementation Example
+
+```javascript
+class PremiumFeatures {
+  constructor() {
+    this.memberstack = null;
+    this.currentMember = null;
+    this.premiumPriceId = 'prc_premium-monthly-d422107a7';
+    this.init();
+  }
+  
+  async init() {
+    try {
+      // Initialize Memberstack
+      this.memberstack = window.$memberstackDom || await import('@memberstack/dom');
+      
+      // Load current member
+      await this.loadCurrentMember();
+      
+      // Setup UI based on membership status
+      this.setupUI();
+      
+      // Add event listeners
+      this.addEventListeners();
+    } catch (error) {
+      console.error('Failed to initialize premium features:', error);
+    }
+  }
+  
+  async loadCurrentMember() {
+    try {
+      const result = await this.memberstack.getCurrentMember();
+      this.currentMember = result.data;
+    } catch (error) {
+      console.error('Failed to load member:', error);
+      this.currentMember = null;
+    }
+  }
+  
+  checkPremiumAccess() {
+    if (!this.currentMember?.planConnections) {
+      return false;
+    }
+    
+    return this.currentMember.planConnections.some(planConnection =>
+      planConnection.payment?.priceId === this.premiumPriceId &&
+      planConnection.status === 'ACTIVE'
+    );
+  }
+  
+  async purchasePremium() {
+    try {
+      // Check if member is logged in
+      if (!this.currentMember) {
+        // Show signup modal with plan pre-selected
+        await this.memberstack.openModal({
+          type: 'SIGNUP',
+          priceId: this.premiumPriceId
+        });
+        return;
+      }
+      
+      // Start checkout process
+      const checkout = await this.memberstack.purchasePlansWithCheckout({
+        priceId: this.premiumPriceId,
+        successUrl: window.location.origin + '/dashboard?upgraded=true',
+        cancelUrl: window.location.origin + '/dashboard',
+        metadataForCheckout: {
+          source: 'premium_features_widget',
+          timestamp: new Date().toISOString()
+        }
+      });
+      
+      // Redirect to Stripe checkout
+      window.location.href = checkout.url;
+    } catch (error) {
+      console.error('Purchase failed:', error);
+      
+      if (error.code === 'MEMBER_NOT_FOUND') {
+        alert('Please log in first to purchase a plan.');
+      } else if (error.code === 'PLAN_ALREADY_ACTIVE') {
+        alert('You already have this plan active!');
+        await this.loadCurrentMember(); // Refresh member data
+        this.setupUI();
+      } else {
+        alert('Purchase failed. Please try again or contact support.');
+      }
+    }
+  }
+  
+  setupUI() {
+    const hasPremiumAccess = this.checkPremiumAccess();
+    
+    // Show/hide premium content
+    document.querySelectorAll('[data-premium-content]').forEach(el => {
+      el.style.display = hasPremiumAccess ? 'block' : 'none';
+    });
+    
+    // Show/hide upgrade prompts
+    document.querySelectorAll('[data-upgrade-prompt]').forEach(el => {
+      el.style.display = hasPremiumAccess ? 'none' : 'block';
+    });
+    
+    // Update purchase buttons
+    const purchaseButtons = document.querySelectorAll('[data-purchase-premium]');
+    purchaseButtons.forEach(btn => {
+      if (hasPremiumAccess) {
+        btn.textContent = 'Premium Active ✓';
+        btn.disabled = true;
+        btn.classList.add('premium-active');
+      } else if (this.currentMember) {
+        btn.textContent = 'Upgrade to Premium';
+        btn.disabled = false;
+        btn.classList.remove('premium-active');
+      } else {
+        btn.textContent = 'Sign Up for Premium';
+        btn.disabled = false;
+        btn.classList.remove('premium-active');
+      }
+    });
+    
+    // Show member info
+    this.updateMemberInfo();
+  }
+  
+  updateMemberInfo() {
+    const memberInfoEl = document.getElementById('member-info');
+    if (!memberInfoEl) return;
+    
+    if (!this.currentMember) {
+      memberInfoEl.innerHTML = '<p>Not logged in</p>';
+      return;
+    }
+    
+    const activePlans = this.currentMember.planConnections?.filter(pc => 
+      pc.status === 'ACTIVE'
+    ) || [];
+    
+    const premiumPlan = activePlans.find(pc => 
+      pc.payment?.priceId === this.premiumPriceId
+    );
+    
+    memberInfoEl.innerHTML = `
+      <div class="member-status">
+        <h4>Account Status</h4>
+        <p><strong>Email:</strong> ${this.currentMember.auth?.email || 'N/A'}</p>
+        <p><strong>Member ID:</strong> ${this.currentMember.id}</p>
+        <p><strong>Premium Status:</strong> 
+          ${premiumPlan ? 
+            `<span class="premium-active">Active since ${new Date(premiumPlan.createdAt).toLocaleDateString()}</span>` : 
+            '<span class="premium-inactive">Not Active</span>'
+          }
+        </p>
+        <p><strong>Total Plans:</strong> ${activePlans.length}</p>
+      </div>
+    `;
+  }
+  
+  addEventListeners() {
+    // Purchase buttons
+    document.querySelectorAll('[data-purchase-premium]').forEach(btn => {
+      btn.addEventListener('click', () => this.purchasePremium());
+    });
+    
+    // Refresh member data button (useful for testing)
+    const refreshBtn = document.getElementById('refresh-member-data');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', async () => {
+        await this.loadCurrentMember();
+        this.setupUI();
+      });
+    }
+    
+    // Listen for member updates from other parts of the app
+    window.addEventListener('memberstack:member-updated', () => {
+      this.loadCurrentMember().then(() => this.setupUI());
+    });
+  }
+  
+  // Utility method to trigger member refresh from other parts of app
+  static triggerMemberUpdate() {
+    window.dispatchEvent(new CustomEvent('memberstack:member-updated'));
+  }
+}
+
+// Auto-initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  new PremiumFeatures();
+});
+
+// Also provide global access for manual initialization
+window.PremiumFeatures = PremiumFeatures;
+```
+
+### HTML Structure for Premium Features
+
+```html
+<!-- Member Info Display -->
+<div id="member-info"></div>
+
+<!-- Premium Content (hidden by default) -->
+<div data-premium-content style="display: none;">
+  <h3>🎉 Premium Content</h3>
+  <p>This content is only visible to premium members!</p>
+  <div class="premium-features">
+    <ul>
+      <li>Advanced Analytics Dashboard</li>
+      <li>Priority Customer Support</li>
+      <li>Exclusive Content Library</li>
+      <li>Advanced Export Features</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Upgrade Prompt (shown to non-premium users) -->
+<div data-upgrade-prompt>
+  <div class="upgrade-card">
+    <h3>Unlock Premium Features</h3>
+    <p>Get access to advanced features and priority support.</p>
+    <ul class="benefits-list">
+      <li>✓ Advanced Analytics</li>
+      <li>✓ Priority Support</li>
+      <li>✓ Exclusive Content</li>
+      <li>✓ Export Tools</li>
+    </ul>
+    <button data-purchase-premium class="upgrade-btn">
+      Sign Up for Premium
+    </button>
+  </div>
+</div>
+
+<!-- Admin/Debug Tools (for testing) -->
+<div class="debug-tools" style="margin-top: 2rem; padding: 1rem; border: 1px dashed #ccc;">
+  <h4>Debug Tools</h4>
+  <button id="refresh-member-data">Refresh Member Data</button>
+</div>
+```
+
+### CSS for Premium Features
+
+```css
+.premium-active {
+  background-color: #10b981 !important;
+  color: white !important;
+  cursor: not-allowed;
+}
+
+.premium-inactive {
+  color: #ef4444;
+  font-weight: bold;
+}
+
+.upgrade-card {
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.benefits-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+
+.benefits-list li {
+  padding: 0.5rem 0;
+  color: #059669;
+  font-weight: 500;
+}
+
+.upgrade-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.upgrade-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+}
+
+.debug-tools {
+  background-color: #fef3c7;
+  border-radius: 4px;
+}
+
+.member-status {
+  background-color: #f8fafc;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+```
+
 ## Plan Status & Member Subscriptions
 
 ### Check Member Plan Status
@@ -6330,6 +6736,9 @@ interface PlanConnection {
   id: string;                         // Connection identifier
   planId: string;                     // Reference to plan
   status: PlanConnectionStatus;       // Connection status
+  payment?: {                         // Payment details for paid plans
+    priceId: string;                  // Stripe price ID - USE THIS for plan detection
+  };
   createdAt: string;                  // When connection was created
   updatedAt: string;                  // Last status change
   cancelledAt?: string | null;        // When cancelled (if applicable)

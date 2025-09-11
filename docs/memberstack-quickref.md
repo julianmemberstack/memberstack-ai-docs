@@ -158,11 +158,11 @@ const { data: plan } = await memberstack.getPlan({
 });
 ```
 
-#### `purchasePlansWithCheckout({ priceIds, successUrl?, cancelUrl? })`
+#### `purchasePlansWithCheckout({ priceId, successUrl?, cancelUrl? })`
 Returns: `Promise<PurchasePlanPayload>`
 ```javascript
 await memberstack.purchasePlansWithCheckout({
-  priceIds: ["pri_abc123"],
+  priceId: "prc_your_price_id_here",
   successUrl: window.location.origin + "/success",
   cancelUrl: window.location.origin + "/pricing"
 });
@@ -248,6 +248,41 @@ await memberstack.removeMemberFromTeam({
   memberId: "mem_xyz789",
   teamId: "team_abc123"
 });
+```
+
+## Plan Detection & Content Gating
+
+### Check if user has specific paid plan
+```javascript
+// Check using payment.priceId (for paid plans)
+const hasPremiumPlan = member?.planConnections?.some(planConnection =>
+  planConnection.payment?.priceId === 'prc_your_price_id_here' &&
+  planConnection.status === 'ACTIVE'
+) || false;
+
+// Check using planId (for free plans)
+const hasFreePlan = member?.planConnections?.some(planConnection =>
+  planConnection.planId === 'pln_your_plan_id_here' &&
+  planConnection.status === 'ACTIVE'
+) || false;
+```
+
+### Content gating example
+```javascript
+async function gateContent() {
+  const { data: member } = await memberstack.getCurrentMember();
+  
+  const hasPremiumAccess = member?.planConnections?.some(pc =>
+    pc.payment?.priceId === 'prc_premium_monthly' &&
+    pc.status === 'ACTIVE'
+  );
+  
+  if (hasPremiumAccess) {
+    document.getElementById('premium-content').style.display = 'block';
+  } else {
+    document.getElementById('upgrade-prompt').style.display = 'block';
+  }
+}
 ```
 
 ## Error Handling Pattern
