@@ -130,7 +130,7 @@ createDataRecord
 Method: memberstack.createDataRecord(params, options?)
 SDK Params type:
 type CreateDataRecordParams = {
-  tableKey: string;            // UPDATED: SDK uses 'tableKey' (not 'table')
+  table: string;
   data: Record<string, any>;
   memberId?: string;          // optional, server ignores this field
 };
@@ -153,12 +153,11 @@ Response (server on success):
 }
 
 Notes:
-- SDK parameter uses 'tableKey' but server expects 'table' in request body
 - _internalUseOnly may be included in responses but is not part of the public SDK typings.
 
 Example (SDK / Webflow):
 const { data } = await memberstack.createDataRecord({
-  tableKey: 'cars',
+  table: 'cars',
   data: {
     make: 'Tesla',
     model: 'Model 3',
