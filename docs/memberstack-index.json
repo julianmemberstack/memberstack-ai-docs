@@ -435,7 +435,7 @@
     },
     {
       "name": "getDataTable",
-      "signature": "getDataTable({ tableKey: string })",
+      "signature": "getDataTable({ table: string })",
       "returns": "Promise<GetDataTablePayload>",
       "category": "data-tables",
       "description": "Get metadata about a single data table"
@@ -449,7 +449,7 @@
     },
     {
       "name": "getDataRecords",
-      "signature": "getDataRecords({ tableKey: string, ...filters })",
+      "signature": "getDataRecords({ table: string, ...filters })",
       "returns": "Promise<GetDataRecordsPayload>",
       "category": "data-tables",
       "description": "List records from a table with basic filters"
@@ -463,7 +463,7 @@
     },
     {
       "name": "createDataRecord",
-      "signature": "createDataRecord({ tableKey: string, data: object })",
+      "signature": "createDataRecord({ table: string, data: object }),"
       "returns": "Promise<CreateDataRecordPayload>",
       "category": "data-tables",
       "description": "Create a new record in a table"

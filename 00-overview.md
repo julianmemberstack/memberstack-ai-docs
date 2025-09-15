@@ -40,7 +40,29 @@ npm install @memberstack/dom
 yarn add @memberstack/dom
 ```
 
+> **⚠️ Important for Next.js/SSR Users**
+>
+> The `@memberstack/dom` package uses browser APIs (localStorage, window) that don't exist during server-side rendering. If you see errors like `localStorage is not defined` or `window is not defined`, you must initialize Memberstack only on the client side.
+>
+> **Quick Fix:**
+> ```javascript
+> // ❌ WRONG - This will cause "localStorage is not defined" errors
+> import memberstack from '@memberstack/dom';
+>
+> // ✅ CORRECT - Initialize only in browser environment
+> let memberstack = null;
+> if (typeof window !== 'undefined') {
+>   const MemberstackDom = require('@memberstack/dom').default;
+>   memberstack = MemberstackDom.init({
+>     publicKey: 'YOUR_PUBLIC_KEY'
+>   });
+> }
+> ```
+>
+> See the [Next.js section in 01-initialization.md](01-initialization.md#nextjs-app) for complete implementation patterns.
+
 ```javascript
+// Standard browser usage (non-SSR)
 import MemberstackDom from '@memberstack/dom';
 
 const memberstack = MemberstackDom.init({

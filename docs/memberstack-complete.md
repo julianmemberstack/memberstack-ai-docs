@@ -9691,7 +9691,7 @@ getDataTable(
 **Parameters:**
 ```typescript
 GetDataTableParams = {
-  tableKey: string; // Table key (NOTE: Uses 'tableKey' not 'table')
+  table: string;
 }
 ```
 
@@ -9727,7 +9727,7 @@ type DataTableResponse = {
 **Example:**
 ```javascript
 const tableInfo = await $memberstackDom.getDataTable({
-  tableKey: "products"
+  table: "products"
 });
 console.log(tableInfo.data.fields); // List all fields and their types
 ```
@@ -9760,7 +9760,7 @@ getDataRecords(
 **Parameters:**
 ```typescript
 GetDataRecordsParams = {
-  tableKey: string;
+  table: string;
   memberId?: string;
   createdAfter?: string; // ISO string
   createdBefore?: string; // ISO string
@@ -9787,7 +9787,7 @@ type GetDataRecordsPayload = Response<{
 **Example:**
 ```javascript
 const res = await $memberstackDom.getDataRecords({
-  tableKey: 'products',
+  table: 'products',
   sortBy: 'createdAt',
   sortDirection: 'DESC',
   limit: 20
@@ -9832,7 +9832,7 @@ createDataRecord(
 **Parameters:**
 ```typescript
 CreateDataRecordParams = {
-  tableKey: string; // NOTE: Uses 'tableKey' not 'table'
+  table: string;
   data: {
     [fieldName: string]: any;
   };
@@ -9843,7 +9843,7 @@ CreateDataRecordParams = {
 **Example:**
 ```javascript
 const newProduct = await $memberstackDom.createDataRecord({
-  tableKey: "products",
+  table: "products",
   data: {
     name: "iPhone 15",
     category: "electronics",

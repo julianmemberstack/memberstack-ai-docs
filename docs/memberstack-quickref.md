@@ -324,7 +324,7 @@ const { data } = await memberstack.queryDataRecords({
 ### Create Record
 ```javascript
 const newRecord = await memberstack.createDataRecord({
-  tableKey: "products",
+  table: "products",
   data: {
     name: "iPhone 15",
     price: 999,

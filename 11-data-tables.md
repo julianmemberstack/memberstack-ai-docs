@@ -81,7 +81,7 @@ data.tables.forEach((t) => {
 
 getDataTable
 Method: memberstack.getDataTable(params, options?)
-Params: { tableKey: string }
+Params: { table: string }
 SDK type: (params: Params.GetDataTableParams): Promise<Payloads.GetDataTablePayload>
 REST call: GET /v1/data-tables/:tableKey
 
@@ -89,7 +89,7 @@ Response (server):
 { "data": { /* DataTableResponse object (same shape as in getDataTables.tables[i]) */ } }
 
 Example (SDK / Webflow):
-const { data } = await memberstack.getDataTable({ tableKey: 'cars' });
+const { data } = await memberstack.getDataTable({ table: 'cars' });
 console.log(data.name, data.fields.length);
 
 Listing Records

@@ -13,14 +13,15 @@ When implementing these examples:
 
 Real-world implementation examples and common patterns for Memberstack DOM integration, including complete authentication flows, plan management, and advanced features.
 
-## 1. Complete Authentication System (React)
+## 1. Complete Authentication System (Next.js/React with SSR Support)
 
-Full-featured authentication component with login, signup, and member management.
+> **⚠️ Note:** This example properly handles SSR by dynamically importing Memberstack only on the client side, preventing "localStorage is not defined" errors.
+
+Full-featured authentication component with login, signup, and member management that works with Next.js App Router and Pages Router.
 
 ```typescript
 // hooks/useMemberstack.ts
 import { useState, useEffect, createContext, useContext } from 'react';
-import { MemberstackDom } from '@memberstack/dom';
 import { MemberstackErrorHandler } from './errorHandler';
 
 interface MemberstackContextType {
@@ -44,12 +45,20 @@ export const useMemberstack = () => {
   return context;
 };
 
-// Initialize Memberstack
-const memberstack = MemberstackDom.init({
-  publicKey: process.env.NEXT_PUBLIC_MEMBERSTACK_KEY!,
-  useCookies: true,
-  setCookieOnRootDomain: true
-});
+// Initialize Memberstack only on client side to prevent SSR errors
+let memberstack: any = null;
+
+const initMemberstack = async () => {
+  if (typeof window !== 'undefined' && !memberstack) {
+    const MemberstackDom = (await import('@memberstack/dom')).default;
+    memberstack = MemberstackDom.init({
+      publicKey: process.env.NEXT_PUBLIC_MEMBERSTACK_KEY!,
+      useCookies: true,
+      setCookieOnRootDomain: true
+    });
+  }
+  return memberstack;
+};
 
 export const MemberstackProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [member, setMember] = useState<any | null>(null);
@@ -59,27 +68,32 @@ export const MemberstackProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // Initialize auth state on mount
   useEffect(() => {
     initializeAuth();
-    
-    // Listen for auth changes
-    const unsubscribe = memberstack.onAuthChange((member, error) => {
-      if (error) {
-        setError(error.message);
-        setMember(null);
-      } else {
-        setMember(member?.data || null);
-        setError(null);
-      }
-      setIsLoading(false);
-    });
-
-    return unsubscribe;
   }, []);
 
   const initializeAuth = async () => {
     try {
-      const currentMember = await memberstack.getCurrentMember();
+      // Initialize Memberstack first
+      const ms = await initMemberstack();
+      if (!ms) {
+        throw new Error('Failed to initialize Memberstack');
+      }
+
+      // Get current member
+      const currentMember = await ms.getCurrentMember();
       setMember(currentMember.data);
       setError(null);
+
+      // Listen for auth changes
+      ms.onAuthChange((member: any, error: any) => {
+        if (error) {
+          setError(error.message);
+          setMember(null);
+        } else {
+          setMember(member?.data || null);
+          setError(null);
+        }
+        setIsLoading(false);
+      });
     } catch (error) {
       // User not logged in - this is expected
       setMember(null);
@@ -92,9 +106,12 @@ export const MemberstackProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
-      const result = await memberstack.loginMemberEmailPassword({ email, password });
+      const ms = await initMemberstack();
+      if (!ms) throw new Error('Memberstack not initialized');
+
+      const result = await ms.loginMemberEmailPassword({ email, password });
       setMember(result.data.member);
     } catch (error) {
       MemberstackErrorHandler.handle(error, 'Login');

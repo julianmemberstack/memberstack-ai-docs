@@ -212,16 +212,21 @@ function App() {
 }
 ```
 
-### Next.js App
+### Next.js App (Preventing SSR Errors)
+
+> **⚠️ Common Error: "localStorage is not defined"**
+>
+> This error occurs when importing `@memberstack/dom` at the module level in Next.js. The package uses browser APIs that don't exist during server-side rendering.
+
+#### Solution 1: Dynamic Import (Recommended)
 ```javascript
 // lib/memberstack.js
-import MemberstackDom from '@memberstack/dom';
-
 let memberstack = null;
 
-export const initMemberstack = () => {
+export const initMemberstack = async () => {
   // Only initialize in browser environment
   if (typeof window !== 'undefined' && !memberstack) {
+    const MemberstackDom = (await import('@memberstack/dom')).default;
     memberstack = MemberstackDom.init({
       publicKey: process.env.NEXT_PUBLIC_MEMBERSTACK_PUBLIC_KEY,
       useCookies: true
@@ -230,7 +235,60 @@ export const initMemberstack = () => {
   return memberstack;
 };
 
-// pages/_app.js
+export const getMemberstack = () => memberstack;
+
+// app/providers/memberstack-provider.tsx (App Router)
+'use client';
+
+import { useEffect, useState } from 'react';
+import { initMemberstack } from '@/lib/memberstack';
+
+export function MemberstackProvider({ children }) {
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    initMemberstack().then(() => {
+      setIsReady(true);
+    });
+  }, []);
+
+  return <>{children}</>;
+}
+
+// app/layout.tsx
+import { MemberstackProvider } from './providers/memberstack-provider';
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en">
+      <body>
+        <MemberstackProvider>
+          {children}
+        </MemberstackProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+#### Solution 2: Conditional Require
+```javascript
+// lib/memberstack.js
+let memberstack = null;
+
+export const initMemberstack = () => {
+  if (typeof window !== 'undefined' && !memberstack) {
+    // Use require to avoid top-level import
+    const MemberstackDom = require('@memberstack/dom').default;
+    memberstack = MemberstackDom.init({
+      publicKey: process.env.NEXT_PUBLIC_MEMBERSTACK_PUBLIC_KEY,
+      useCookies: true
+    });
+  }
+  return memberstack;
+};
+
+// pages/_app.js (Pages Router)
 import { useEffect } from 'react';
 import { initMemberstack } from '../lib/memberstack';
 
@@ -238,7 +296,7 @@ function MyApp({ Component, pageProps }) {
   useEffect(() => {
     initMemberstack();
   }, []);
-  
+
   return <Component {...pageProps} />;
 }
 ```
@@ -437,6 +495,27 @@ testMemberstackConnection();
 
 ### Common Issues
 
+**"localStorage is not defined" / "window is not defined" (Next.js/SSR)**
+```javascript
+// ❌ Wrong - Top-level import causes SSR errors
+import memberstack from '@memberstack/dom';
+
+// ✅ Correct - Dynamic import or conditional loading
+let memberstack = null;
+if (typeof window !== 'undefined') {
+  const MemberstackDom = require('@memberstack/dom').default;
+  memberstack = MemberstackDom.init({ publicKey: 'pk_...' });
+}
+
+// ✅ Alternative - Dynamic import in useEffect
+useEffect(() => {
+  import('@memberstack/dom').then((MemberstackDom) => {
+    const ms = MemberstackDom.default.init({ publicKey: 'pk_...' });
+    setMemberstack(ms);
+  });
+}, []);
+```
+
 **"Memberstack is not defined"**
 ```javascript
 // ❌ Wrong - Memberstack not loaded yet
@@ -448,7 +527,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 ```
 
-**"Invalid public key"**  
+**"Invalid public key"**
 ```javascript
 // ❌ Wrong - Missing pk_ prefix
 publicKey: 'sb_1234567890abcdef'
@@ -466,6 +545,25 @@ useCookies: true
 useCookies: true,
 setCookieOnRootDomain: true
 ```
+
+### SSR Framework Compatibility
+
+**Next.js App Router**
+- Use `'use client'` directive in components that use Memberstack
+- Initialize in a client component or provider
+- Use dynamic imports to prevent SSR errors
+
+**Next.js Pages Router**
+- Initialize in `_app.js` useEffect hook
+- Use conditional imports with `typeof window` check
+
+**Remix**
+- Initialize in a client-only component
+- Use `.client.js` file extension for Memberstack code
+
+**Nuxt.js**
+- Use plugins with `client: true` option
+- Initialize in mounted() lifecycle hook
 
 ## Next Steps
 
