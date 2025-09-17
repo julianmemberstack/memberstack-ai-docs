@@ -1,5 +1,9 @@
 # Memberstack DOM Quick Reference
 
+🚨 **Critical Security Warning**: The DOM package alone provides **NO SECURITY** - it's for user experience only. For production applications, you MUST implement server-side validation.
+
+**🟢 For Production Security**: See [12-server-side-authentication.md](12-server-side-authentication.md)
+
 ## Initialization
 ```javascript
 import memberstack from '@memberstack/dom';
@@ -8,25 +12,31 @@ const ms = memberstack.init({ publicKey: 'pk_...' });
 
 ## Most Common Methods
 
-### Authentication (8 methods)
+⚠️ **All methods below are client-side only and can be bypassed.** Use server-side validation for production.
 
-#### `loginMemberEmailPassword({ email, password })`
+### Authentication (8 methods) - 🔴 Client-Side UX Only
+
+#### 🔴 `loginMemberEmailPassword({ email, password })`
 Returns: `Promise<LoginMemberEmailPasswordPayload>`
 ```javascript
+// 🔴 UX only - can be bypassed
 const result = await memberstack.loginMemberEmailPassword({
   email: "user@example.com",
   password: "securePassword123"
 });
+// 🟢 For production: Validate server-side after login
 ```
 
-#### `signupMemberEmailPassword({ email, password, customFields?, metaData?, plans? })`
+#### 🔴 `signupMemberEmailPassword({ email, password, customFields?, metaData?, plans? })`
 Returns: `Promise<SignupMemberEmailPasswordPayload>`
 ```javascript
+// 🔴 UX only - can be bypassed
 const result = await memberstack.signupMemberEmailPassword({
   email: "newuser@example.com",
   password: "securePassword123",
   customFields: { firstName: "John", lastName: "Doe" }
 });
+// 🟢 For production: Validate server-side after signup
 ```
 
 #### `logout()`
@@ -355,8 +365,68 @@ await memberstack.updateDataRecord({
 });
 ```
 
+## 🛡️ Production Security (Required)
+
+### Server-Side Authentication Setup
+```bash
+# Install both packages
+npm install @memberstack/dom @memberstack/admin
+```
+
+### Environment Variables
+```bash
+# Client-side (safe to expose)
+NEXT_PUBLIC_MEMBERSTACK_PUBLIC_KEY=pk_live_...
+
+# Server-side (NEVER expose to client)
+MEMBERSTACK_SECRET_KEY=sk_live_...
+MEMBERSTACK_APP_ID=app_...
+```
+
+### 🟢 Server-Side Token Validation
+```typescript
+import memberstackAdmin from '@memberstack/admin'
+
+const memberstack = memberstackAdmin.init(process.env.MEMBERSTACK_SECRET_KEY!)
+
+export async function validateToken(token: string) {
+  try {
+    const tokenData = await memberstack.verifyToken({
+      token,
+      audience: process.env.MEMBERSTACK_APP_ID
+    })
+    return { isValid: true, memberId: tokenData.id }
+  } catch {
+    return { isValid: false }
+  }
+}
+```
+
+### 🟢 Protected API Route
+```typescript
+// app/api/premium-content/route.ts
+export async function GET(request: NextRequest) {
+  const token = request.headers.get('authorization')?.replace('Bearer ', '')
+
+  const { isValid } = await validateToken(token)
+  if (!isValid) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  return NextResponse.json({ data: 'Protected content' })
+}
+```
+
+### Security Checklist
+- [ ] Server-side token validation on all protected routes
+- [ ] Plan status verification server-side
+- [ ] Secret keys never exposed to client
+- [ ] Rate limiting on auth endpoints
+
 ## Complete Documentation
 
 For all 57 methods and detailed parameters, see:
+- **🛡️ Security Guide**: [12-server-side-authentication.md](12-server-side-authentication.md)
+- **🛡️ Security Best Practices**: [13-security-considerations.md](13-security-considerations.md)
 - Full reference: `.memberstack/complete.md`
 - Search index: `.memberstack/index.json`

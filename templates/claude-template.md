@@ -1,6 +1,10 @@
 <!-- MEMBERSTACK-AI-DOCS-START -->
 # Memberstack DOM Package - AI Documentation
 
+🚨 **Critical Security Warning**: The DOM package alone provides **NO SECURITY** - it's for user experience only. For production applications, you MUST implement server-side validation using the Admin SDK.
+
+**🟢 For Production Security**: See `.memberstack/12-server-side-authentication.md`
+
 ## Quick Start
 ```javascript
 import memberstack from '@memberstack/dom';
@@ -9,16 +13,18 @@ const ms = memberstack.init({ publicKey: 'pk_...' });
 
 ## Most Common Methods
 
+⚠️ **Security Note**: All methods below are client-side only and can be bypassed. For production, implement server-side validation.
+
 For complete implementation examples, see `.memberstack/quickref.md`
 
-### Authentication
-- `loginMemberEmailPassword({ email, password })` - Email/password login
-- `signupMemberEmailPassword({ email, password, customFields?, metaData?, plans? })` - Create account
+### Authentication - 🔴 Client-Side UX Only
+- `loginMemberEmailPassword({ email, password })` - 🔴 Email/password login (UX only)
+- `signupMemberEmailPassword({ email, password, customFields?, metaData?, plans? })` - 🔴 Create account (UX only)
 - `logout()` - Sign out current member
-- `getCurrentMember()` - Get logged-in member data
+- `getCurrentMember()` - 🔴 Get logged-in member data (can be faked)
 - `onAuthChange(callback)` - Listen for auth state changes
 - `sendMemberResetPasswordEmail({ email })` - Send password reset
-- `loginWithProvider({ provider })` - Social login (google/facebook)
+- `loginWithProvider({ provider })` - 🔴 Social login (UX only)
 - `sendMemberLoginPasswordlessEmail({ email })` - Passwordless login
 
 ### Member Management
@@ -111,7 +117,40 @@ useEffect(() => {
 }, []);
 ```
 
-## Documentation Version: 2.0.0
-Last Updated: 2025-01-11
+## 🛡️ Production Security (Required)
+
+### Server-Side Setup
+```bash
+npm install @memberstack/dom @memberstack/admin
+```
+
+### 🟢 Server-Side Token Validation
+```typescript
+import memberstackAdmin from '@memberstack/admin'
+
+const memberstack = memberstackAdmin.init(process.env.MEMBERSTACK_SECRET_KEY!)
+
+export async function validateToken(token: string) {
+  try {
+    const tokenData = await memberstack.verifyToken({
+      token,
+      audience: process.env.MEMBERSTACK_APP_ID
+    })
+    return { isValid: true, memberId: tokenData.id }
+  } catch {
+    return { isValid: false }
+  }
+}
+```
+
+### Security Checklist
+- [ ] Server-side token validation on all protected routes
+- [ ] Plan status verification server-side
+- [ ] Secret keys never exposed to client
+
+**Complete Security Guide**: See `.memberstack/12-server-side-authentication.md`
+
+## Documentation Version: 2.1.0
+Last Updated: 2025-01-17
 Total Methods: 49
 <!-- MEMBERSTACK-AI-DOCS-END -->

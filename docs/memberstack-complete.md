@@ -1,10 +1,10 @@
 ---
 title: Memberstack DOM Package - Complete Documentation
-version: 2.0.0
-description: Complete AI-optimized documentation for Memberstack DOM SDK
-last_updated: 2025-01-11
+version: 2.1.0
+description: Complete AI-optimized documentation for Memberstack DOM SDK with security guidance
+last_updated: 2025-01-17
 total_methods: 75
-categories: [authentication, members, plans, ui, advanced, data-tables]
+categories: [authentication, members, plans, ui, advanced, data-tables, security]
 ---
 
 # Memberstack DOM Package - Complete Documentation
@@ -12,17 +12,19 @@ categories: [authentication, members, plans, ui, advanced, data-tables]
 ## Table of Contents
 
 1. [Overview](#overview)
-2. [Initialization](#initialization)
-3. [Authentication](#authentication)
-4. [Member Management](#member-management)
-5. [Plan Management](#plan-management)
-6. [UI Components](#ui-components)
-7. [Member Journey](#member-journey)
-8. [Advanced Features](#advanced-features)
-9. [Types Reference](#types-reference)
-10. [Error Handling](#error-handling)
-11. [Examples](#examples)
-12. [Data Tables](#data-tables)
+2. [Security Considerations](#security-considerations)
+3. [Server-Side Authentication](#server-side-authentication)
+4. [Initialization](#initialization)
+5. [Authentication](#authentication)
+6. [Member Management](#member-management)
+7. [Plan Management](#plan-management)
+8. [UI Components](#ui-components)
+9. [Member Journey](#member-journey)
+10. [Advanced Features](#advanced-features)
+11. [Types Reference](#types-reference)
+12. [Error Handling](#error-handling)
+13. [Examples](#examples)
+14. [Data Tables](#data-tables)
 
 ---
 
@@ -32,10 +34,16 @@ categories: [authentication, members, plans, ui, advanced, data-tables]
 This documentation is optimized for AI coding assistants. When helping developers with Memberstack DOM implementation:
 
 1. **Always use exact method signatures** provided in these docs
-2. **Include error handling** in all code examples  
-3. **Reference specific file sections** when needed (e.g., "See 02-authentication.md for login methods")
-4. **Provide complete, runnable code examples**
-5. **Explain the relationship** between methods and overall authentication flow
+2. **Include error handling** in all code examples
+3. **CRITICAL: Always warn about client-side security limitations** - DOM package alone can be bypassed
+4. **Distinguish between UX and security** - DOM is for user experience, Admin SDK is for security
+5. **Recommend server-side validation** for any production access control or paid content
+6. **Reference security sections** - Always point to Security Considerations and Server-Side Authentication
+7. **Reference specific file sections** when needed (e.g., "See 02-authentication.md for login methods")
+8. **Provide complete, runnable code examples**
+9. **Explain the relationship** between methods and overall authentication flow
+
+🚨 **Critical Security Warning**: The DOM package alone provides **NO SECURITY** - it's designed for user experience only. For production applications with access control, you MUST implement server-side validation using the Admin SDK.
 
 ## Package Overview
 
@@ -274,18 +282,121 @@ async function handleMemberstackOperation(operation) {
 
 ## Next Steps
 
-1. **[01-initialization.md](01-initialization.md)** - Detailed setup and configuration options
-2. **[02-authentication.md](02-authentication.md)** - Complete authentication methods
-3. **[03-member-management.md](03-member-management.md)** - Member data operations
-4. **[04-plan-management.md](04-plan-management.md)** - Subscription and billing
-5. **[10-examples.md](10-examples.md)** - Complete implementation examples
+### 🛡️ Essential for Production (Read First)
+1. **[12-server-side-authentication.md](12-server-side-authentication.md)** - **Required for production security**
+2. **[13-security-considerations.md](13-security-considerations.md)** - **Security best practices and attack prevention**
+
+### Implementation Guide
+3. **[01-initialization.md](01-initialization.md)** - Detailed setup and configuration options
+4. **[02-authentication.md](02-authentication.md)** - Client-side authentication methods (UX only)
+5. **[03-member-management.md](03-member-management.md)** - Member data operations
+6. **[04-plan-management.md](04-plan-management.md)** - Subscription and billing
+7. **[10-examples.md](10-examples.md)** - Complete implementation examples
 
 ## Support Resources
 
 - **Memberstack Dashboard**: Configure your app settings
+- **Security Assessment**: See [13-security-considerations.md](13-security-considerations.md) checklist
 - **Error Codes**: See [09-error-handling.md](09-error-handling.md)
 - **TypeScript Definitions**: See [08-types-reference.md](08-types-reference.md)
-- **Advanced Features**: See [07-advanced-features.md](07-advanced-features.md)# Memberstack DOM - Initialization & Configuration
+- **Advanced Features**: See [07-advanced-features.md](07-advanced-features.md)
+
+---
+
+# Security Considerations
+
+🚨 **Critical Security Warning**: The methods documented below provide **user experience only** and can be easily bypassed. For production applications, implement server-side validation using the Admin SDK.
+
+## Security Levels
+
+| Implementation | Security Level | Use Case |
+|---------------|---------------|----------|
+| 🔴 **DOM Package Only** | None (easily bypassed) | Demos, marketing, development |
+| 🟢 **DOM + Admin SDK** | Secure (cryptographic validation) | Production applications |
+
+## Common Attack Vectors
+
+### Client-Side Bypass
+```javascript
+// Attacker opens browser console and types:
+localStorage.setItem('_ms-mid', 'fake-token')
+window.hasPremiumAccess = true
+// Now they have "access" to protected content
+```
+
+### Solution: Server-Side Validation
+```typescript
+// Server-side validation (cannot be bypassed)
+const tokenData = await memberstack.verifyToken({ token })
+if (!tokenData) {
+  return res.status(401).json({ error: 'Invalid token' })
+}
+```
+
+**For complete security implementation**: See [12-server-side-authentication.md](12-server-side-authentication.md)
+**For security best practices**: See [13-security-considerations.md](13-security-considerations.md)
+
+---
+
+# Server-Side Authentication
+
+For production applications, you must implement server-side authentication using the `@memberstack/admin` package alongside the DOM package.
+
+## Installation
+```bash
+npm install @memberstack/dom @memberstack/admin
+```
+
+## Environment Setup
+```bash
+# Client-side (safe to expose)
+NEXT_PUBLIC_MEMBERSTACK_PUBLIC_KEY=pk_sb_your_public_key
+
+# Server-side (NEVER expose in client code)
+MEMBERSTACK_SECRET_KEY=sk_your_secret_key
+MEMBERSTACK_APP_ID=app_your_app_id
+```
+
+## Basic Server-Side Validation
+```typescript
+import memberstackAdmin from '@memberstack/admin'
+
+const memberstack = memberstackAdmin.init(process.env.MEMBERSTACK_SECRET_KEY!)
+
+export async function validateMemberSession(token: string) {
+  try {
+    const tokenData = await memberstack.verifyToken({
+      token,
+      audience: process.env.MEMBERSTACK_APP_ID,
+    })
+
+    return { isValid: true, memberId: tokenData.id }
+  } catch (error) {
+    return { isValid: false }
+  }
+}
+```
+
+## Protected API Route Example
+```typescript
+// app/api/premium-content/route.ts
+export async function GET(request: NextRequest) {
+  const token = request.headers.get('authorization')?.replace('Bearer ', '')
+
+  const { isValid } = await validateMemberSession(token)
+  if (!isValid) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  return NextResponse.json({ data: 'Protected content' })
+}
+```
+
+**For complete implementation guide**: See [12-server-side-authentication.md](12-server-side-authentication.md)
+
+---
+
+# Memberstack DOM - Initialization & Configuration
 
 ## AI Assistant Instructions
 When helping with Memberstack initialization:
