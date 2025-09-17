@@ -1,6 +1,6 @@
 {
   "name": "memberstack-ai-docs",
-  "version": "1.2.3",
+  "version": "1.4.0",
   "description": "AI-friendly documentation installer for Memberstack DOM package",
   "main": "src/installer.js",
   "bin": {
