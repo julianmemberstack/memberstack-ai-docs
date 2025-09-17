@@ -2,6 +2,73 @@ Data Tables Documentation - @memberstack/dom (DOM + Webflow)
 
 This document describes the Data Tables client methods exposed by @memberstack/dom, their exact parameters, and the raw REST requests they issue. It also calls out the current server response shapes and known mismatches so you can integrate with 100% accuracy.
 
+## 🚨 **CRITICAL: When Data Tables Need Server-Side Validation**
+
+**Memberstack provides basic security** but **YOU must handle business logic and complex operations**.
+
+### 🟢 **What Memberstack Handles Automatically:**
+- Table-level access rules (createRule, readRule, updateRule, deleteRule)
+- Authentication token validation
+- Rate limiting (25 reads/sec, 10 creates/min, 30 writes/min)
+- Record filtering based on access rules
+
+### 🔴 **What YOU Must Handle Server-Side:**
+
+| **Operation Type** | **Client-Side (Direct)** | **Server-Side (Required)** |
+|-------------------|--------------------------|----------------------------|
+| **Basic CRUD** with Memberstack rules | ✅ `memberstack.queryDataRecords()` | ❌ Not needed |
+| **Business logic** (limits, custom rules) | ❌ Never | ✅ Always required |
+| **Cross-table operations** | ❌ Never | ✅ Always required |
+| **Complex permissions** | ❌ Never | ✅ Always required |
+
+### 📋 **Examples of When You NEED Server-Side Validation:**
+
+**❌ Business Logic (Memberstack CAN'T handle):**
+```javascript
+// Subscription limits: "Free users can only create 3 posts"
+// Time restrictions: "Users can only post once per day"
+// Content moderation: "Block posts with profanity"
+// Geographic rules: "Feature not available in certain countries"
+```
+
+**❌ Cross-Table Operations (Memberstack CAN'T coordinate):**
+```javascript
+// E-commerce: Update inventory + user balance + create order
+// Social media: Create like + update post count + award author points
+// Course enrollment: Check prerequisites + capacity + create enrollment
+```
+
+### ✅ **Fortune 500 Pattern for Data Tables:**
+
+```javascript
+// ✅ Simple reads: Direct to Memberstack
+const posts = await memberstack.queryDataRecords({
+  table: 'posts',
+  query: { findMany: { where: { published: true } } }
+})
+
+// ✅ Complex operations: Through your API
+const result = await fetch('/api/create-post', {
+  method: 'POST',
+  headers: { 'Authorization': `Bearer ${token}` },
+  body: JSON.stringify({ title, content })
+})
+
+// Your API handles business logic, then calls Memberstack
+```
+
+## 🤔 **Security Decision Template**
+**Use this for EVERY Memberstack operation:**
+
+```javascript
+// 🤔 SECURITY DECISION:
+// What am I protecting? → [page access / sensitive data / business logic]
+// Can this be faked? → [yes/no - if yes, server-side required]
+// Business rules? → [limits / validation / cross-table logic]
+// Fortune 500 pattern? → [client routing / server APIs]
+// ✅ RESULT: [Client-side OK / Server-side required]
+```
+
 ## Installation Requirements
 
 Data Tables functionality requires the latest version of @memberstack/dom. Make sure you install the latest version:
@@ -74,10 +141,19 @@ Notes:
 - recordCount reflects only records accessible to the active context (access rules and auth are applied).
 
 Example (SDK / Webflow):
+```javascript
+// 🤔 SECURITY DECISION:
+// What am I protecting? → Just listing available tables (metadata)
+// Can this be faked? → No sensitive data, just table names
+// Business rules? → No limits or cross-table logic
+// Fortune 500 pattern? → Direct client calls for simple reads
+// ✅ RESULT: Client-side OK
+
 const { data } = await memberstack.getDataTables();
 data.tables.forEach((t) => {
   console.log(`${t.key} → ${t.recordCount} records`);
 });
+```
 
 getDataTable
 Method: memberstack.getDataTable(params, options?)
@@ -89,8 +165,17 @@ Response (server):
 { "data": { /* DataTableResponse object (same shape as in getDataTables.tables[i]) */ } }
 
 Example (SDK / Webflow):
+```javascript
+// 🤔 SECURITY DECISION:
+// What am I protecting? → Table schema/metadata (field definitions)
+// Can this be faked? → No sensitive user data, just table structure
+// Business rules? → No business logic involved
+// Fortune 500 pattern? → Direct client calls for metadata
+// ✅ RESULT: Client-side OK
+
 const { data } = await memberstack.getDataTable({ table: 'cars' });
 console.log(data.name, data.fields.length);
+```
 
 Listing Records
 Prefer memberstack.queryDataRecords with findMany for listing, filtering, includes, and counts. See the "data-records/query — Includes, Counts, and Pagination" section below for full examples and pagination patterns.
@@ -156,6 +241,14 @@ Notes:
 - _internalUseOnly may be included in responses but is not part of the public SDK typings.
 
 Example (SDK / Webflow):
+```javascript
+// 🤔 SECURITY DECISION:
+// What am I protecting? → Creating car records (could involve business rules)
+// Can this be faked? → User could spam create unlimited cars
+// Business rules? → Might have limits (e.g., "premium users only", "max 5 cars per user")
+// Fortune 500 pattern? → Server-side for business logic, client for simple cases
+
+// ❌ POTENTIAL ISSUE: No business logic validation
 const { data } = await memberstack.createDataRecord({
   table: 'cars',
   data: {
@@ -164,6 +257,19 @@ const { data } = await memberstack.createDataRecord({
     year: 2022
   }
 });
+
+// ✅ BETTER: Server-side with business logic
+const response = await fetch('/api/cars/create', {
+  method: 'POST',
+  headers: { 'Authorization': `Bearer ${token}` },
+  body: JSON.stringify({
+    make: 'Tesla',
+    model: 'Model 3',
+    year: 2022
+  })
+});
+// Server validates: user limits, premium features, data validation, etc.
+```
 
 console.log('Created record:', data.id);
 

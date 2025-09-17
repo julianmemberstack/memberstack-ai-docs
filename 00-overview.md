@@ -345,11 +345,29 @@ async function handleMemberstackOperation(operation) {
 | **Member Journey** | `sendMemberVerificationEmail()`, `resetMemberPassword()`, `onAuthChange()` | Email flows and callbacks |
 | **Advanced Features** | `getSecureContent()`, `createPost()`, `joinTeam()` | Comments, teams, secure content |
 
+## 🚨 SSR/Next.js Quick Fix
+
+**Getting "localStorage is not defined" errors?** This is common with Next.js 13+ and SSR:
+
+```javascript
+// ❌ DON'T: Import at module level
+import memberstack from "@memberstack/dom"
+
+// ✅ DO: Import conditionally on client-side
+"use client"
+let memberstack = null
+if (typeof window !== 'undefined') {
+  import("@memberstack/dom").then(m => memberstack = m.default)
+}
+```
+
+See **[02-authentication.md](02-authentication.md)** for complete SSR-safe implementation patterns.
+
 ## Next Steps
 
 ### 🎯 Start Here (Everything You Need)
 1. **[14-security-testing-tools.md](14-security-testing-tools.md)** - **Test your security instantly**
-2. **[02-authentication.md](02-authentication.md)** - **Complete secure authentication (auto-built for you)**
+2. **[02-authentication.md](02-authentication.md)** - **Complete secure authentication with SSR safety (auto-built for you)**
 3. **[12-server-side-authentication.md](12-server-side-authentication.md)** - **Understanding what was built for you**
 
 ### Advanced Features
