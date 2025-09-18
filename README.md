@@ -13,13 +13,15 @@ npx memberstack-ai-docs
 The installer will ask which AI assistant you're using:
 - **Claude Code** - Creates `CLAUDE.md`
 - **Cursor** - Creates `.cursorrules`
-- **Both** - Creates both files
+- **Codex** - Creates `AGENTS.md`
+- **All** - Creates all three
 
 Or specify directly:
 ```bash
 npx memberstack-ai-docs --ai claude   # Claude Code only
 npx memberstack-ai-docs --ai cursor   # Cursor only
-npx memberstack-ai-docs --ai both     # Both tools
+npx memberstack-ai-docs --ai codex    # Codex (AGENTS.md)
+npx memberstack-ai-docs --ai all      # All supported tools
 ```
 
 ## 📦 What Gets Installed
@@ -34,6 +36,7 @@ The installer creates:
 2. **AI config files** (based on your selection):
    - `CLAUDE.md` - For Claude Code (if selected)
    - `.cursorrules` - For Cursor (if selected)
+   - `AGENTS.md` - For Codex (if selected)
 
 The installer is **non-destructive** - it preserves your existing content and only adds clearly marked Memberstack sections.
 
@@ -115,7 +118,7 @@ If you prefer to set up manually:
 1. Download the documentation files from GitHub
 2. Create `.memberstack/` directory in your project
 3. Copy documentation files to `.memberstack/`
-4. Add Memberstack section to your CLAUDE.md/.cursorrules
+4. Add Memberstack section to your CLAUDE.md/.cursorrules/AGENTS.md
 
 ### Building From Source
 

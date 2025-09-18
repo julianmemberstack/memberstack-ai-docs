@@ -9,6 +9,9 @@ const CLAUDE_MARKER_START = '<!-- MEMBERSTACK-AI-DOCS-START -->';
 const CLAUDE_MARKER_END = '<!-- MEMBERSTACK-AI-DOCS-END -->';
 const CURSOR_MARKER_START = '# MEMBERSTACK-AI-DOCS-START';
 const CURSOR_MARKER_END = '# MEMBERSTACK-AI-DOCS-END';
+// Codex (AGENTS.md) uses hidden HTML markers like CLAUDE
+const CODEX_MARKER_START = '<!-- MEMBERSTACK-AI-DOCS-START -->';
+const CODEX_MARKER_END = '<!-- MEMBERSTACK-AI-DOCS-END -->';
 
 class MemberstackInstaller {
   constructor(options = {}) {
@@ -21,8 +24,8 @@ class MemberstackInstaller {
     try {
       console.log(chalk.blue('📦 Installing Memberstack AI Documentation...'));
       
-      // Get AI tools to install for (default to both)
-      const aiTools = options.aiTools || ['claude', 'cursor'];
+      // Get AI tools to install for (default to all)
+      const aiTools = options.aiTools || ['claude', 'cursor', 'codex'];
       
       if (options.dryRun) {
         console.log(chalk.yellow('🔍 DRY RUN MODE - No files will be modified'));
@@ -47,6 +50,12 @@ class MemberstackInstaller {
         console.log(chalk.gray('⊘ Skipping .cursorrules (Cursor not selected)'));
       }
 
+      if (aiTools.includes('codex')) {
+        await this.updateCodexAgents(options);
+      } else {
+        console.log(chalk.gray('⊘ Skipping AGENTS.md (Codex not selected)'));
+      }
+
       // Step 4: Validate installation
       if (!options.dryRun) {
         await this.validate({ ...options, aiTools });
@@ -61,6 +70,9 @@ class MemberstackInstaller {
       }
       if (aiTools.includes('cursor')) {
         console.log(chalk.white('   ✓ Cursor (.cursorrules)'));
+      }
+      if (aiTools.includes('codex')) {
+        console.log(chalk.white('   ✓ Codex (AGENTS.md)'));
       }
       
       console.log(chalk.cyan('\n📖 Documentation available:'));
@@ -198,6 +210,38 @@ class MemberstackInstaller {
     }
   }
 
+  async updateCodexAgents(options) {
+    const agentsPath = path.join(this.projectRoot, 'AGENTS.md');
+    const templatePath = path.join(__dirname, '..', 'templates', 'codex-template.md');
+
+    if (options.dryRun) {
+      if (fs.existsSync(agentsPath)) {
+        console.log(chalk.gray('  Would update existing AGENTS.md'));
+      } else {
+        console.log(chalk.gray('  Would create new AGENTS.md'));
+      }
+      return;
+    }
+
+    // Read template
+    let template;
+    if (fs.existsSync(templatePath)) {
+      template = fs.readFileSync(templatePath, 'utf-8');
+    } else {
+      // Fallback to embedded template
+      template = this.getCodexTemplate();
+    }
+
+    if (fs.existsSync(agentsPath)) {
+      // Update existing file
+      await this.appendToFile(agentsPath, template, CODEX_MARKER_START, CODEX_MARKER_END, 'AGENTS.md');
+    } else {
+      // Create new file
+      fs.writeFileSync(agentsPath, template);
+      console.log(chalk.green('✓ Created AGENTS.md'));
+    }
+  }
+
   async appendToFile(filePath, content, markerStart, markerEnd, fileName) {
     const existingContent = fs.readFileSync(filePath, 'utf-8');
     
@@ -247,6 +291,9 @@ class MemberstackInstaller {
 
     // Remove from .cursorrules
     await this.removeFromFile('.cursorrules', CURSOR_MARKER_START, CURSOR_MARKER_END, options);
+
+    // Remove from AGENTS.md (Codex)
+    await this.removeFromFile('AGENTS.md', CODEX_MARKER_START, CODEX_MARKER_END, options);
 
     console.log(chalk.green.bold('\n✅ Memberstack AI Documentation removed successfully!'));
   }
@@ -300,8 +347,11 @@ class MemberstackInstaller {
       if (fs.existsSync(path.join(this.projectRoot, '.cursorrules'))) {
         aiTools.push('cursor');
       }
+      if (fs.existsSync(path.join(this.projectRoot, 'AGENTS.md'))) {
+        aiTools.push('codex');
+      }
       if (aiTools.length === 0) {
-        aiTools = ['claude', 'cursor']; // Check both if neither exists
+        aiTools = ['claude', 'cursor', 'codex']; // Check all if none exists
       }
     }
     
@@ -344,6 +394,21 @@ class MemberstackInstaller {
         }
       } else {
         checks.push({ status: '⚠', message: 'CLAUDE.md not found' });
+      }
+    }
+
+    // Check AGENTS.md if Codex was selected
+    if (aiTools.includes('codex')) {
+      const agentsPath = path.join(this.projectRoot, 'AGENTS.md');
+      if (fs.existsSync(agentsPath)) {
+        const content = fs.readFileSync(agentsPath, 'utf-8');
+        if (content.includes(CODEX_MARKER_START)) {
+          checks.push({ status: '✓', message: 'AGENTS.md contains Memberstack section' });
+        } else {
+          checks.push({ status: '⚠', message: 'AGENTS.md exists but missing Memberstack section' });
+        }
+      } else {
+        checks.push({ status: '⚠', message: 'AGENTS.md not found' });
       }
     }
 
@@ -497,6 +562,130 @@ Last Updated: 2025-01-11
 Total Methods: 49
 ${CLAUDE_MARKER_END}`;
   }
+
+  getCodexTemplate() {
+    return `${CODEX_MARKER_START}
+
+# Memberstack DOM Package - AI Documentation (Codex)
+
+This AGENTS.md section equips Codex with Memberstack's API context. The docs live in the `.memberstack/` directory for fast lookup.
+
+## Quick Start
+\`\`\`javascript
+import memberstack from '@memberstack/dom';
+const ms = memberstack.init({ publicKey: 'pk_...' });
+\`\`\`
+
+## Most Common Methods
+
+For complete implementation examples, see \`.memberstack/quickref.md\`
+
+### Authentication
+- \`loginMemberEmailPassword({ email, password })\` - Email/password login
+- \`signupMemberEmailPassword({ email, password, customFields?, metaData?, plans? })\` - Create account
+- \`logout()\` - Sign out current member
+- \`getCurrentMember()\` - Get logged-in member data
+- \`onAuthChange(callback)\` - Listen for auth state changes
+- \`sendMemberResetPasswordEmail({ email })\` - Send password reset
+- \`loginWithProvider({ provider })\` - Social login (google/facebook)
+- \`sendMemberLoginPasswordlessEmail({ email })\` - Passwordless login
+
+### Member Management
+- \`updateMember({ customFields?, metaData? })\` - Update member data
+- \`updateMemberAuth({ email?, oldPassword?, newPassword? })\` - Update credentials
+- \`getMemberJSON()\` - Get member data as JSON
+- \`updateMemberJSON(json)\` - Update member JSON data
+- \`updateMemberProfileImage({ image })\` - Update profile picture
+- \`deleteMember()\` - Delete member account
+- \`sendMemberVerificationEmail()\` - Send email verification
+
+### Plans & Billing
+- \`getPlans()\` - Get all available plans
+- \`getPlan({ planId })\` - Get specific plan details
+- \`purchasePlansWithCheckout({ priceIds, successUrl?, cancelUrl? })\` - Stripe checkout
+- \`launchStripeCustomerPortal({ returnUrl? })\` - Open billing portal
+- \`addPlan({ planId })\` - Add free plan to member
+- \`removePlan({ planId })\` - Remove plan from member
+
+### UI Components
+- \`openModal({ type: 'LOGIN' | 'SIGNUP' | 'PROFILE' })\` - Open pre-built modal
+- \`hideModal()\` - Close current modal
+
+## Finding All Methods (49 total)
+
+1. **Search index**: \`.memberstack/index.json\` - Searchable method index
+2. **Quick reference**: \`.memberstack/quickref.md\` - 30 common methods with examples
+3. **Full reference**: \`.memberstack/complete.md\` - Complete documentation
+
+### Search Examples
+\`\`\`bash
+# Find login methods
+grep "login" .memberstack/index.json
+
+# Find method signature
+grep -A 5 "loginMemberEmailPassword" .memberstack/complete.md
+
+# Find all authentication methods
+grep '"category": "authentication"' .memberstack/index.json
+\`\`\`
+
+## AI Instructions
+
+When implementing Memberstack features:
+1. ALWAYS check \`.memberstack/index.json\` for available methods
+2. Use exact method signatures from documentation
+3. Include error handling in all examples using try/catch blocks
+4. Reference \`.memberstack/complete.md\` for detailed parameters and return types
+5. Check error codes and types in the documentation
+
+## Error Handling Pattern
+
+\`\`\`javascript
+try {
+  const { data: member } = await memberstack.getCurrentMember();
+  // Handle success
+} catch (error) {
+  if (error.code === 'INVALID_CREDENTIALS') {
+    // Handle invalid login
+  } else if (error.code === 'NETWORK_ERROR') {
+    // Handle network issues
+  } else {
+    // Handle other errors
+    console.error('Memberstack error:', error.message);
+  }
+}
+\`\`\`
+
+## Common Patterns
+
+### Check if logged in
+\`\`\`javascript
+const { data: member } = await memberstack.getCurrentMember();
+if (member) {
+  // User is logged in
+  console.log('Welcome', member.auth.email);
+} else {
+  // User is not logged in
+  await memberstack.openModal({ type: 'LOGIN' });
+}
+\`\`\`
+
+### React/Vue auth listener
+\`\`\`javascript
+useEffect(() => {
+  const unsubscribe = memberstack.onAuthChange((member) => {
+    setCurrentMember(member);
+  });
+  return unsubscribe;
+}, []);
+\`\`\`
+
+## Documentation Version: 2.0.0
+Last Updated: 2025-01-11
+Total Methods: 49
+${CODEX_MARKER_END}`;
+  }
+
 
   getCursorTemplate() {
     return `${CURSOR_MARKER_START}

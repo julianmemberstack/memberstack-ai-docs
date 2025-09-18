@@ -32,7 +32,7 @@ program
   .option('--dry-run', 'Preview changes without modifying files')
   .option('--force', 'Force installation even if files exist')
   .option('--verbose', 'Show detailed output')
-  .option('--ai <tool>', 'Specify AI tool: claude, cursor, or both (default: asks interactively)')
+  .option('--ai <tool>', 'Specify AI tool: claude, cursor, codex, or all (default: asks interactively)')
   .parse(process.argv);
 
 const options = program.opts();
@@ -41,9 +41,10 @@ async function selectAITools() {
   console.log(chalk.cyan('Which AI assistant are you using?\n'));
   console.log('  1) Claude Code');
   console.log('  2) Cursor');
-  console.log('  3) Both\n');
+  console.log('  3) Codex');
+  console.log('  4) All three\n');
   
-  const choice = await askQuestion(chalk.yellow('Select (1-3): '));
+  const choice = await askQuestion(chalk.yellow('Select (1-4): '));
   
   switch(choice.trim()) {
     case '1':
@@ -51,10 +52,12 @@ async function selectAITools() {
     case '2':
       return ['cursor'];
     case '3':
-      return ['claude', 'cursor'];
+      return ['codex'];
+    case '4':
+      return ['claude', 'cursor', 'codex'];
     default:
-      console.log(chalk.yellow('\nInvalid choice. Installing for both AI tools.'));
-      return ['claude', 'cursor'];
+      console.log(chalk.yellow('\nInvalid choice. Installing for all supported tools.'));
+      return ['claude', 'cursor', 'codex'];
   }
 }
 
@@ -84,24 +87,26 @@ async function main() {
       // Use command line option
       const aiOption = options.ai.toLowerCase();
       if (aiOption === 'both' || aiOption === 'all') {
-        aiTools = ['claude', 'cursor'];
+        aiTools = ['claude', 'cursor', 'codex'];
       } else if (aiOption === 'claude') {
         aiTools = ['claude'];
       } else if (aiOption === 'cursor') {
         aiTools = ['cursor'];
+      } else if (aiOption === 'codex') {
+        aiTools = ['codex'];
       } else {
-        console.log(chalk.yellow(`Unknown AI tool '${options.ai}'. Installing for both.`));
-        aiTools = ['claude', 'cursor'];
+        console.log(chalk.yellow(`Unknown AI tool '${options.ai}'. Installing for all.`));
+        aiTools = ['claude', 'cursor', 'codex'];
       }
     } else if (process.stdout.isTTY && !process.env.CI) {
       // Interactive mode (default if running in terminal and not CI)
       aiTools = await selectAITools();
     } else {
-      // Non-interactive (e.g., CI environment) - install both
-      aiTools = ['claude', 'cursor'];
+      // Non-interactive (e.g., CI environment) - install all supported tools
+      aiTools = ['claude', 'cursor', 'codex'];
     }
 
-    console.log(chalk.green(`\n✓ Installing for: ${aiTools.map(t => t === 'claude' ? 'Claude Code' : 'Cursor').join(' and ')}\n`));
+    console.log(chalk.green(`\n✓ Installing for: ${aiTools.map(t => t === 'claude' ? 'Claude Code' : t === 'cursor' ? 'Cursor' : 'Codex').join(' and ')}\n`));
 
     // Pass the selected tools to the installer
     await installer.install({ ...options, aiTools });
